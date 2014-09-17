@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="2dp"
+        android:paddingRight="2dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/search_tag">
+
+            <ImageView
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:id="@+id/onooma_search_box_tag_layout_delete_image_view"
+                android:src="@drawable/delete_white"
+                android:layout_gravity="center_vertical"
+                android:background="#00000000"
+                android:padding="4dp" />
+
+            <TextView
+                android:id="@+id/onooma_search_box_tag_layout_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="26dp"
+                android:layout_marginRight="8dp"
+                android:text="TAG"
+                android:textColor="#ffffff"
+                android:textSize="16sp"
+                android:gravity="center_vertical|center_horizontal"
+                android:singleLine="true"
+                android:layout_gravity="center" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+</RelativeLayout>
