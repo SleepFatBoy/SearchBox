@@ -2,6 +2,7 @@ package com.onooma.searchbox;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.EditText;
 
@@ -11,6 +12,7 @@ import android.widget.EditText;
  */
 class OnoomaEditText extends EditText {
 
+    private static final String TAG = OnoomaEditText.class.getSimpleName();
     private OnCancelListener onCancelListener;
 
     public void setOnCancelListener(OnCancelListener onCancelListener) {
@@ -39,7 +41,8 @@ class OnoomaEditText extends EditText {
 
     @Override
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
-        if(keyCode == KeyEvent.KEYCODE_BACK)
+        Log.d(TAG, "onKeyPreIme keyCode:" + keyCode + " ,KeyEvent:" + event);
+        if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
             if(onCancelListener != null)
                 onCancelListener.onCancel();
         return super.onKeyPreIme(keyCode, event);

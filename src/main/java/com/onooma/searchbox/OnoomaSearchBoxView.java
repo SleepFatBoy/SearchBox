@@ -2,12 +2,14 @@ package com.onooma.searchbox;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -18,6 +20,7 @@ import android.widget.TextView;
  */
 public class OnoomaSearchBoxView  extends LinearLayout {
 
+    private static final String TAG = OnoomaSearchBoxView.class.getSimpleName();
     private LinearLayout container;
     private OnoomaEditText editText;
     private Typeface typeface = null;
@@ -68,45 +71,71 @@ public class OnoomaSearchBoxView  extends LinearLayout {
         if(typeface != null)
             editText.setTypeface(typeface);
 
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                Log.d(TAG, "afterTextChanged");
+                if (onSearchListener != null)
+                    onSearchListener.onText(s.toString());
+            }
+        });
         editText.setOnCancelListener(new OnoomaEditText.OnCancelListener() {
             @Override
             public void onCancel() {
-                if (onSearchListener != null) {
-                    editText.setText("");
-                    onSearchListener.onCancel();
+                Log.d(TAG, "setOnCancelListener");
+                editText.setText("");
+                editText.clearFocus();
+            }
+        });
+        editText.setOnFocusChangeListener(new OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                Log.d(TAG, "onFocusChange " + hasFocus);
+                if(hasFocus){
+                    showKeyboard();
+                    if (onSearchListener != null)
+                        onSearchListener.onStart();
+                }else {
+                    hideKeyboard();
+                    if(!doSearch) {
+                        if (onSearchListener != null)
+                            onSearchListener.onCancel();
+                    }else{
+                        doSearch = false;
+                        String query = getQuery();
+                        if(onSearchListener != null)
+                            onSearchListener.onSearch(query);
+                    }
                 }
             }
         });
         editText.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!doSearch)
-                    showKeyboard();
-                else
-                    doSearch = false;
+                Log.d(TAG, "onClick");
+                editText.requestFocus();
             }
         });
         editText.setOnKeyListener(new OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
+                Log.d(TAG, "onKey " + keyCode + " ,KeyEvent " + event);
                 if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_UP) {
                     if (editText.getText().length() > 0)
                         addTag(String.valueOf(editText.getText()));
-                    doSearch = true;
                     editText.setText("");
-
-                    int count = container.getChildCount();
-                    if (count > 0) {
-                        String query = "";
-                        for (int i = 0; i < count; i++) {
-                            View view = container.getChildAt(i);
-                            query += view.getTag() + " ";
-                        }
-                        query = query.trim();
-                        hideKeyboard();
-                        if(onSearchListener != null)
-                            onSearchListener.onSearch(query);
-                    }
+                    doSearch = true;
+                    editText.clearFocus();
                 }
                 return false;
             }
@@ -114,6 +143,9 @@ public class OnoomaSearchBoxView  extends LinearLayout {
     }
 
     public void addTag(String text) {
+        text = text.trim();
+        if(text.length() == 0)
+            return;
         LayoutInflater inflater = LayoutInflater.from(getContext());
         final View tag = inflater.inflate(R.layout.onooma_search_box_tag_layout, null);
         tag.setRotationY(180);
@@ -121,22 +153,52 @@ public class OnoomaSearchBoxView  extends LinearLayout {
         if(typeface != null)
             textView.setTypeface(typeface);
         textView.setText(text);
-        ImageView imageView = (ImageView) tag.findViewById(R.id.onooma_search_box_tag_layout_delete_image_view);
-        imageView.setOnClickListener(new View.OnClickListener() {
+//        ImageView imageView = (ImageView) tag.findViewById(R.id.onooma_search_box_tag_layout_delete_image_view);
+//        imageView.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                container.removeView(tag);
+//                editText.performClick();
+//            }
+//        });
+        tag.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 container.removeView(tag);
                 editText.performClick();
             }
         });
-        tag.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                editText.performClick();
-            }
-        });
         tag.setTag(text);
         container.addView(tag);
+    }
+
+    public String getQuery(){
+        String query = "";
+
+        int count = container.getChildCount();
+        if (count > 0) {
+            for (int i = 0; i < count; i++) {
+                View view = container.getChildAt(i);
+                query += view.getTag() + " ";
+            }
+            query = query.trim();
+        }
+
+        return query;
+    }
+
+    public void doSearch(String text){
+        text = text.trim();
+        if(text.length() > 0) {
+            addTag(text);
+            editText.setText("");
+            doSearch = true;
+            editText.clearFocus();
+        }
+    }
+
+    public void start(){
+        editText.requestFocus();
     }
 
     public void clear(){
@@ -156,5 +218,7 @@ public class OnoomaSearchBoxView  extends LinearLayout {
     public interface OnSearchListener {
         public void onSearch(String query);
         public void onCancel();
+        public void onStart();
+        public void onText(String query);
     }
 }
